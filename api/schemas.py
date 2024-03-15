@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class ItemBase(BaseModel):
@@ -6,18 +7,7 @@ class ItemBase(BaseModel):
     description: str | None = None
     price: float = 0
     tax: float | None = None
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "title": "Foo",
-                    "Desc": "Nice Item",
-                    "price": 35.4,
-                    "tax": 0,
-                }
-            ]
-        }
-    } 
+    
 class ItemCreate(ItemBase):
     pass
 
@@ -40,7 +30,20 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     is_active: bool
-    cart: list[Item] = []
+
+    class Config:
+        orm_mode = True
+        
+class CartBase(BaseModel):
+    id: int
+    
+class CartCreate(CartBase):
+    pass 
+
+class Cart(CartBase):
+    items: list[Item]= []
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         orm_mode = True

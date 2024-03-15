@@ -1,5 +1,6 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String,Float
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String,Float, TIMESTAMP, text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from database import Base
 
@@ -20,3 +21,14 @@ class Item(Base):
     price = Column(Float,index=True)
     tax = Column(Float,index=True)
     is_active = Column(Boolean, default=True)
+
+class Cart(Base):
+    __tablename__="carts"
+    
+    id = Column(Integer, nullable=False, primary_key=True, index=True)
+    created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
+    updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
+    item_id =Column(Integer, ForeignKey("items.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    products = relationship("Item")
+    owner = relationship("User")

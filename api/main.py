@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 import crud, models, schemas
 from database import SessionLocal, engine
-
+from typing import Optional
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -48,3 +48,9 @@ def create_item(
 def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = crud.get_items(db, skip=skip, limit=limit)
     return items
+
+@app.post("/items/cart",response_model = schemas.Cart)
+def create_cart(
+    item: schemas.Item,user: Optional[schemas.User] = None, db: Session = Depends(get_db)
+):
+    return crud.create_cart(db=db, item=item, user=user)
