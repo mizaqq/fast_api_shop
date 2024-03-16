@@ -35,9 +35,21 @@ def create_item(db: Session, item: schemas.ItemCreate):
     db.refresh(db_item)
     return db_item
 
-def create_cart(db: Session,item: schemas.Item, user: Optional[schemas.User] = None):
-    db_cart = models.Cart(item_id=item.id,owner_id = user.id)
+def create_cart(db: Session,cart_create: schemas.Cart):
+    items=[]
+    for i in cart_create.items:
+        items.append(db.query(models.Item).filter(models.Item.id == i.id).first())
+    db_cart = models.Cart()
+    for i in items:
+        db_cart.items.append(i)
     db.add(db_cart)
     db.commit()
     db.refresh(db_cart)
     return db_cart
+
+def get_cart(db: Session, cart_id: int):
+    cart = db.query(models.Cart).filter(models.Cart.id == cart_id).first()
+    if cart:
+        cart.items
+    return cart
+

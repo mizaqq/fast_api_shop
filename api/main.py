@@ -49,8 +49,17 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = crud.get_items(db, skip=skip, limit=limit)
     return items
 
-@app.post("/items/cart",response_model = schemas.Cart)
+@app.post("/items/carts")
 def create_cart(
-    item: schemas.Item,user: Optional[schemas.User] = None, db: Session = Depends(get_db)
+    cart_create: schemas.Cart, db: Session = Depends(get_db)
 ):
-    return crud.create_cart(db=db, item=item, user=user)
+    return crud.create_cart(db=db,cart_create=cart_create)
+
+@app.get("/items/cart/{cart_id}")
+def read_cart(cart_id: int, db: Session = Depends(get_db)):
+    return crud.get_cart(db=db, cart_id=cart_id)
+#TODO UPDATE CART ADD ITEM
+#def update_cart_add(cart_id: int,cart_update: schemas.Cart db: Session = Depends(get_db)):
+    
+#TODO UPDATE CART DELETE ITEM
+#def update_cart_delete(cart_id: int,cart_update: schemas.Cart db: Session = Depends(get_db)):

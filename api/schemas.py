@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-
+from typing import List
 
 class ItemBase(BaseModel):
     title: str
@@ -35,15 +35,15 @@ class User(UserBase):
         orm_mode = True
         
 class CartBase(BaseModel):
-    id: int
-    
-class CartCreate(CartBase):
-    pass 
+    pass
 
 class Cart(CartBase):
-    items: list[Item]= []
+    id: int
     created_at: datetime
-    updated_at: datetime
+    user: int
+    items: List[Item]
 
     class Config:
         orm_mode = True
+class CartCreate(Cart):
+    pass
