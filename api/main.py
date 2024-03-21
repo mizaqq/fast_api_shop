@@ -51,15 +51,18 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
 @app.post("/items/carts")
 def create_cart(
-    cart_create: schemas.Cart, db: Session = Depends(get_db)
+    cart_create: schemas.CartCreate, db: Session = Depends(get_db)
 ):
     return crud.create_cart(db=db,cart_create=cart_create)
 
 @app.get("/items/cart/{cart_id}")
 def read_cart(cart_id: int, db: Session = Depends(get_db)):
     return crud.get_cart(db=db, cart_id=cart_id)
-#TODO UPDATE CART ADD ITEM
-#def update_cart_add(cart_id: int,cart_update: schemas.Cart db: Session = Depends(get_db)):
-    
-#TODO UPDATE CART DELETE ITEM
-#def update_cart_delete(cart_id: int,cart_update: schemas.Cart db: Session = Depends(get_db)):
+
+@app.delete("/items/cart/{cart_id}/{item_id}")
+def update_cart_delete(cart_id: int, item_id: int, db: Session = Depends(get_db)):
+    return crud.delete_item_from_cart(db=db,cart_id=cart_id,item_id=item_id)
+
+@app.put("/items/cart/{cart_id}")
+def update_cart_add(cart_id: int,cart_update: schemas.Cart, db: Session = Depends(get_db)):
+    return crud.add_item_to_cart(db=db,cart_id=cart_id,cart_update=cart_update)
