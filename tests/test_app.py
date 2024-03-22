@@ -32,6 +32,7 @@ app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
+
 def test_create_user():
     response = client.post("/users/",
         headers={
@@ -41,9 +42,7 @@ def test_create_user():
         json={"email": "test@test.com",  "password": "test"}
     )
     assert response.status_code == 200
-    data = response.json()
-    data.pop('id', None)
-    assert data == {  "email": "test@test.com", "is_active": True}
+    assert response.json() == {  "email": "test@test.com","id":1, "is_active": True}
  
     
 def test_create_user_already_registered():
@@ -58,9 +57,54 @@ def test_create_user_already_registered():
     assert response.json() =={"detail": "Email already registered"}
 
 
-def test_get_user():
+def test_get_users():
     header = {
         'accept': 'application/json'
     }
     response = client.get("/users/",headers=header)
     assert response.status_code == 200
+    
+def test_read_user():
+    header = {
+        'accept': 'application/json'
+    }
+    response = client.get("/users/1",headers=header)
+    assert response.status_code == 200
+    assert response.json() == {  "email": "test@test.com","id":1, "is_active": True}
+    
+def test_create_item():
+    header = {
+        'accept': 'application/json',
+        'Content-Type': 'application/json'
+        }
+    response = client.post("/items/", headers = header, json = {
+            "title": "string",
+            "description": "string",
+            "price": 0,
+            "tax": 0
+              })
+    assert response.status_code == 200
+    assert response.json() == {
+          "title": "string",
+          "description": "string",
+          "price": 0,
+          "tax": 0,
+          "id": 1,
+          "is_active": True
+        }
+def test_read_items():
+    header = {
+        'accept': 'application/json'
+    }
+    response = client.get("/items/",headers=header)
+    assert response.status_code == 200
+    assert response.json() == [
+      {
+        "title": "string",
+        "description": "string",
+        "price": 0,
+        "tax": 0,
+        "id": 1,
+        "is_active": True
+      }
+    ]
