@@ -10,7 +10,7 @@ from api import models, crud, schemas
 from api.database import SessionLocal, engine
 models.Base.metadata.create_all(bind=engine)
 
-#TODO ADD TOKENS
+#TODO ADD TOKEN AUTH
 def get_db():
     db = SessionLocal()
     try:
