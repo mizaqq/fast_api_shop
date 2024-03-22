@@ -39,7 +39,7 @@ class CartBase(BaseModel):
 
 class Cart(CartBase):
     id: int
-    created_at: datetime
+#    created_at: datetime
     user: int
     items: List[Item]
 

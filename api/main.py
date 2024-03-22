@@ -53,6 +53,8 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = crud.get_items(db, skip=skip, limit=limit)
     return items
 
+#TODO deactivate item
+
 @app.post("/items/carts")
 def create_cart(
     cart_create: schemas.CartCreate, db: Session = Depends(get_db)
@@ -68,5 +70,5 @@ def update_cart_delete(cart_id: int, item_id: int, db: Session = Depends(get_db)
     return crud.delete_item_from_cart(db=db,cart_id=cart_id,item_id=item_id)
 
 @app.put("/items/cart/{cart_id}")
-def update_cart_add(cart_id: int,cart_update: schemas.Cart, db: Session = Depends(get_db)):
-    return crud.add_item_to_cart(db=db,cart_id=cart_id,cart_update=cart_update)
+def update_cart_add(cart_id: int,items: list[schemas.Item], db: Session = Depends(get_db)):
+    return crud.add_item_to_cart(db=db,cart_id=cart_id,items=items)

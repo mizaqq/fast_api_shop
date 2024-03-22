@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from . import models, schemas
 from fastapi import HTTPException
-
+from sqlalchemy.sql import func
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
 
@@ -44,8 +44,10 @@ def create_cart(db: Session,cart_create: schemas.Cart):
         items.append(db.query(models.Item).filter(models.Item.id == i.id).first())
     db_cart = models.Cart()
     for i in items:
-        if i.is_active==False or i is None:
-            raise HTTPException(status_code=404, detail="One of items not found or inactive")
+        if i is None:
+            raise HTTPException(status_code=404, detail="One of items not found")
+        if i.is_active==False:
+            raise HTTPException(status_code=404, detail="One of items inactive")
         db_cart.items.append(i)
     db.add(db_cart)
     db.commit()
@@ -65,19 +67,31 @@ def delete_item_from_cart(db:Session, cart_id:int, item_id:int):
         if item==None or item not in cart.items:
             raise HTTPException(status_code=404, detail="Item not found")
         cart.items.remove(item)
+        cart.updated_at=func.current_timestamp()
         db.commit()
         db.refresh(cart)
+    if cart:
+        cart.items
     return cart
     
-def add_item_to_cart(db,cart_id,cart_update):
+def add_item_to_cart(db,cart_id,items):
     cart = db.query(models.Cart).filter(models.Cart.id == cart_id).first()
     if cart:
-        items=[]
-        for i in cart_update.items:
-            items.append(db.query(models.Item).filter(models.Item.id == i.id).first())
+        items_db=[]
         for i in items:
-            if i.is_active==False or i is None:
-                raise HTTPException(status_code=404, detail="One of items not found or inactive")
+            items_db.append(db.query(models.Item).filter(models.Item.id == i.id).first())
+        for i in items_db:
+            if i is None:
+                raise HTTPException(status_code=404, detail="One of items not found")
+            if i.is_active==False:
+                raise HTTPException(status_code=404, detail="One of items inactive")
+            if i in cart.items:
+                raise HTTPException(status_code=404, detail="This item is already in the cart!")
             cart.items.append(i)
+        cart.updated_at=func.current_timestamp()
+        db.commit()
+        db.refresh(cart)
+    if cart:
+        cart.items    
     return cart
         
