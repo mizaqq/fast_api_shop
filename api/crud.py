@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-import models, schemas
+from . import models, schemas
 from fastapi import HTTPException
 
 def get_user(db: Session, user_id: int):
