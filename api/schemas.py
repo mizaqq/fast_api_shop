@@ -20,12 +20,12 @@ class Item(ItemBase):
 
 
 class UserBase(BaseModel):
+    username: str
     email: str
 
 
 class UserCreate(UserBase):
     password: str
-
 
 class User(UserBase):
     id: int
@@ -33,13 +33,17 @@ class User(UserBase):
 
     class Config:
         orm_mode = True
+
+class UserInDB(User):
+    hashed_password: str
+
+
         
 class CartBase(BaseModel):
     pass
 
 class Cart(CartBase):
     id: int
-#    created_at: datetime
     user: int
     items: List[Item]
 
@@ -47,3 +51,11 @@ class Cart(CartBase):
         orm_mode = True
 class CartCreate(Cart):
     pass
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: str | None = None

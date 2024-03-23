@@ -232,3 +232,29 @@ def test_update_cart():
         }
       ]
     }
+    
+def test_cart_delete_item():
+    header = {
+      'accept': 'application/json',
+      'Content-Type': 'application/json'
+      }
+    response = client.delete("/items/cart/1/2", headers = header)
+    assert response.status_code == 200
+    data = response.json()
+    data.pop('updated_at', None)
+    data.pop('created_at', None)
+    assert data == {
+      "id": 1,
+      "user_id": None,
+      "items": [
+        {
+          "description": "string",
+          "title": "string",
+          "is_active": True,
+          "id": 1,
+          "price": 0,
+          "tax": 0
+        }
+      ]
+    }
+  
