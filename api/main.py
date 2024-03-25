@@ -12,17 +12,6 @@ from api import models, crud, schemas,database
 from api.database import SessionLocal, engine
 models.Base.metadata.create_all(bind=engine)
 
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-
-#TODO ADD TOKEN AUTH
-
         
 @app.post("/token")
 def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends(),],db: Session = Depends(database.get_db)
@@ -39,7 +28,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
     
 @app.get("/users/me/")
 async def read_users_me(
-    current_user: Annotated[schemas.User, Depends(crud.get_current_active_user)]
+    current_user: Annotated[schemas.User, Depends(crud.get_current_active_user)],
 ):
     return current_user
 
@@ -58,11 +47,11 @@ def read_user(user_id: int, db: Session = Depends(database.get_db)):
 
 
 
-@app.post("/items/", response_model=schemas.Item)
+@app.post("/items/")
 def create_item(
-   item: schemas.ItemCreate, db: Session = Depends(database.get_db)
+   item: Annotated[schemas.ItemCreate, Depends(crud.create_item)]
 ):
-    return crud.create_item(db=db, item=item)
+    return item
 
 
 @app.get("/items/", response_model=list[schemas.Item])

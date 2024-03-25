@@ -29,6 +29,24 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
+def auth():
+    header_post = {
+        'accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    data = {
+          'grant_type': '',
+          'username': 'test',
+          'password': 'test',
+          'scope': '',
+          'client_id': '',
+          'client_secret': ''
+      }
+    token = client.post("/token",headers=header_post,data=data)
+    token_auth= {
+        'Authorization': token.json()['token_type']+ ' ' + token.json()['access_token']
+        }
+    return token_auth
 
 client = TestClient(app)
 
@@ -73,10 +91,9 @@ def test_read_user():
     assert response.json() == {"username": "test", "email": "test@test.com","id":1, "is_active": True}
     
 def test_create_item():
-    header = {
-        'accept': 'application/json',
-        'Content-Type': 'application/json'
-        }
+    header = auth()
+    header['accept']= 'application/json'
+    header['Content-Type'] = 'application/json'
     response = client.post("/items/", headers = header, json = {
             "title": "string",
             "description": "string",
@@ -185,10 +202,9 @@ def test_read_cart():
     }
     
 def test_update_cart():
-    header = {
-        'accept': 'application/json',
-        'Content-Type': 'application/json'
-        }
+    header = auth()
+    header['accept']= 'application/json'
+    header['Content-Type'] = 'application/json'
     client.post("/items/", headers = header, json = {
             "title": "string",
             "description": "string",
@@ -291,21 +307,15 @@ def test_login_for_access_token_wrong():
     assert response.json() =={"detail": "Incorrect username or password"}
     
 def test_read_user_me():
-    header_post = {
-        'accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    data = {
-          'grant_type': '',
-          'username': 'test',
-          'password': 'test',
-          'scope': '',
-          'client_id': '',
-          'client_secret': ''
-      }
-    token = client.post("/token",headers=header_post,data=data)
-    header_get= {
-        'accept': 'application/json',
-        'Authorization': token.json()['token_type']+ ' ' + token.json()['access_token']
-        }
-    response=client.get("/users/me/",headers=header_get)
+    header = auth()
+    header['accept']= 'application/json'
+    response=client.get("/users/me/",headers=header)
+    assert response.status_code == 200
+    data= response.json()
+    data.pop('hashed_password',None)
+    assert data == {
+      "is_active": True,
+      "id": 1,
+      "email": "test@test.com",
+      "username": "test"
+    }

@@ -10,8 +10,10 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Depends
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+#TODO ADD SCOPES 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token",
+    scopes={"me": "Read information about the current user.", "items": "Create items."},
+)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -45,8 +47,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],db: Session = Depends(database.get_db)):
+def check_auth(token: Annotated[str, Depends(oauth2_scheme)],db:Session = Depends(database.get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -62,15 +63,22 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],db: Ses
         raise credentials_exception
     user=db.query(models.User).filter(models.User.username==token_data.username).first()
     if user is None:
-        raise credentials_exception
+        raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    return user
+
+def get_current_user(user: Annotated[models.User, Depends(check_auth)]):
     return user
 
 
 def get_current_active_user(
     current_user: Annotated[models.User, Depends(get_current_user)]
 ):
-    #if current_user.is_active==False:
-    #    raise HTTPException(status_code=400, detail="Inactive user")
+    if current_user.is_active==False:
+        raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 
@@ -102,8 +110,8 @@ def get_user_by_email(db: Session, email: str):
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
-#TODO HASH PASSWORD
-#TODO USER AUTH
+
+
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = pwd_context.hash(user.password)
@@ -117,7 +125,11 @@ def get_items(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Item).offset(skip).limit(limit).all()
 
 
-def create_item(db: Session, item: schemas.ItemCreate):
+def create_item(
+        item: schemas.ItemCreate,
+        user: Annotated[models.User, Depends(check_auth)],
+        db: Session = Depends(database.get_db)
+        ):
     db_item = models.Item(**item.model_dump())
     db.add(db_item)
     db.commit()
