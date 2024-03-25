@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Optional,Annotated
-from . import models, schemas
+from . import models, schemas, database
 from fastapi import HTTPException, status
 from sqlalchemy.sql import func
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -46,7 +46,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],db: Session):
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],db: Session = Depends(database.get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -60,17 +60,17 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],db: Ses
         token_data = schemas.TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = db.query(models.User).filter(models.User.username == token_data.username).first()
+    user=db.query(models.User).filter(models.User.username==token_data.username).first()
     if user is None:
         raise credentials_exception
     return user
 
 
-async def get_current_active_user(
+def get_current_active_user(
     current_user: Annotated[models.User, Depends(get_current_user)]
 ):
-    if current_user.is_active==False:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    #if current_user.is_active==False:
+    #    raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 
@@ -89,14 +89,6 @@ def get_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return schemas.Token(access_token=access_token, token_type="bearer")
-
-
-def read_users_me(
-    db: Session,
-    current_user: Annotated[models.User, Depends(get_current_active_user)]
-):
-    return current_user
-
 
 
 def get_user_by_id(db: Session, user_id: int):

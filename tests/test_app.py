@@ -1,12 +1,12 @@
 from fastapi.testclient import TestClient
-from api.main import app, get_db
+from api.main import app
 from fastapi import Depends
 import pytest
 from api import models
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from api.database import SessionLocal, engine
+from api.database import SessionLocal, engine,get_db
 from sqlalchemy.orm import Session
 
 SQLALCHEMY_DATABASE_URL = "sqlite://"
@@ -39,10 +39,10 @@ def test_create_user():
         'accept': 'application/json',
         'Content-Type': 'application/json',
         },
-        json={"email": "test@test.com",  "password": "test"}
+        json={"username": "test", "email": "test@test.com",  "password": "test"}
     )
     assert response.status_code == 200
-    assert response.json() == {  "email": "test@test.com","id":1, "is_active": True}
+    assert response.json() == {"username": "test", "email": "test@test.com","id":1, "is_active": True}
  
     
 def test_create_user_already_registered():
@@ -51,7 +51,7 @@ def test_create_user_already_registered():
         'accept': 'application/json',
         'Content-Type': 'application/json',
         },
-        json={"email": "test@test.com",  "password": "test"}
+        json={"username": "test","email": "test@test.com",  "password": "test"}
     )
     assert response.status_code == 400
     assert response.json() =={"detail": "Email already registered"}
@@ -70,7 +70,7 @@ def test_read_user():
     }
     response = client.get("/users/1",headers=header)
     assert response.status_code == 200
-    assert response.json() == {  "email": "test@test.com","id":1, "is_active": True}
+    assert response.json() == {"username": "test", "email": "test@test.com","id":1, "is_active": True}
     
 def test_create_item():
     header = {
