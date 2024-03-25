@@ -257,4 +257,55 @@ def test_cart_delete_item():
         }
       ]
     }
+def test_login_for_access_token():
+    header = {
+        'accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    data = {
+          'grant_type': '',
+          'username': 'test',
+          'password': 'test',
+          'scope': '',
+          'client_id': '',
+          'client_secret': ''
+      }
+    response = client.post("/token",headers=header,data=data)
+    assert response.status_code == 200
   
+def test_login_for_access_token_wrong():
+    header = {
+        'accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    data = {
+          'grant_type': '',
+          'username': 'test',
+          'password': 'wrong',
+          'scope': '',
+          'client_id': '',
+          'client_secret': ''
+      }
+    response = client.post("/token",headers=header,data=data)
+    assert response.status_code == 401
+    assert response.json() =={"detail": "Incorrect username or password"}
+    
+def test_read_user_me():
+    header_post = {
+        'accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    data = {
+          'grant_type': '',
+          'username': 'test',
+          'password': 'test',
+          'scope': '',
+          'client_id': '',
+          'client_secret': ''
+      }
+    token = client.post("/token",headers=header_post,data=data)
+    header_get= {
+        'accept': 'application/json',
+        'Authorization': token.json()['token_type']+ ' ' + token.json()['access_token']
+        }
+    response=client.get("/users/me/",headers=header_get)
